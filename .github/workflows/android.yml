@@ -1,0 +1,46 @@
+name: Build StyleYar APK 1.6.0
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build APK
+        run: |
+          gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify APK
+        run: |
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          echo "APK: $APK"
+          ls -lh "$APK"
+          unzip -t "$APK" >/dev/null
+          test -s "$APK"
+          echo "APK verification successful"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: StyleYar-APK-1.6.0
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
